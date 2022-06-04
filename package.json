@@ -1,0 +1,23 @@
+{
+  "name": "adc-generative-art-connect-arduino",
+  "private": false,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@serialport/parser-readline": "^10.3.0",
+    "p5": "^1.4.1",
+    "serialport": "^10.4.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.2",
+    "@babel/plugin-proposal-class-properties": "^7.17.12",
+    "@babel/preset-env": "^7.18.2",
+    "babel-loader": "^8.2.5",
+    "express": "~4.16.1",
+    "express-ws": "^5.0.2",
+    "html-webpack-plugin": "^5.5.0",
+    "webpack": "^5.73.0",
+    "webpack-dev-middleware": "^5.3.3"
+  }
+}
