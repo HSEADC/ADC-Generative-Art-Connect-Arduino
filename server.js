@@ -50,6 +50,17 @@ const serialPort = new SerialPort({
   baudRate: 9600
 })
 
+const lineStream = serialPort.pipe(new ReadlineParser({ delimiter: '\n' }))
+
+lineStream.on('data', (data) => {
+  if (ws) {
+    const dataString = data.toString()
+
+    ws.send(dataString)
+    // console.log(dataString);
+  }
+})
+
 // Read data that is available but keep the stream in "paused mode"
 // serialPort.on("readable", function () {
 //   if (ws) {
@@ -74,13 +85,3 @@ const serialPort = new SerialPort({
 // Pipe the data into another stream (like a parser or standard out)
 // const lineStream = serialPort.pipe(new ReadlineParser());
 // const lineStream = serialPort.pipe(new ReadlineParser({ delimiter: "\r\n" }));
-const lineStream = serialPort.pipe(new ReadlineParser({ delimiter: '\n' }))
-
-lineStream.on('data', (data) => {
-  if (ws) {
-    const dataString = data.toString()
-
-    ws.send(dataString)
-    // console.log(dataString);
-  }
-})
