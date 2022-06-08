@@ -1,3 +1,19 @@
+let canvasSize
+
+let sketchData = {
+  accelerometer: {
+    x: 0,
+    y: 0,
+    z: 0
+  },
+  gyroscope: {
+    x: 0,
+    y: 0,
+    z: 0
+  },
+  temperature: 0
+}
+
 let radius = 100
 
 // From https://habr.com/ru/post/516334/
@@ -21,9 +37,11 @@ wsConnection.onerror = function (error) {
 }
 
 wsConnection.onmessage = function message(event) {
-  // console.log("received: %s", event.data);
-  // console.log(event.data);
-  radius = parseInt(event.data)
+  // console.log('received: %s', event.data)
+  // console.log(JSON.parse(event.data))
+  // radius = parseInt(event.data)
+  sketchData = JSON.parse(event.data)
+  // console.log(sketchData)
 }
 
 // export const wsSend = function (data) {
@@ -46,25 +64,33 @@ document.addEventListener('DOMContentLoaded', () => {
   frame.id = 'frame'
   container.appendChild(frame)
 
-  const canvasSize = 700
-
   let sketch = (p) => {
     p.setup = () => {
-      let canvas = p.createCanvas(canvasSize, canvasSize)
+      canvasSize = { width: window.innerWidth, height: window.innerHeight }
+
+      let canvas = p.createCanvas(canvasSize.width, canvasSize.height)
       canvas.parent('frame')
       p.frameRate(60)
     }
 
     p.draw = () => {
       // const offset = canvasSize / 2 + radius / 2;
-      const offset = canvasSize / 2
+      const offset = {
+        x: canvasSize.width / 2 + Math.abs(sketchData.gyroscope.x) / 100,
+        y: canvasSize.height / 2 + Math.abs(sketchData.gyroscope.y) / 100
+        // x: canvasSize.width / 2 + Math.abs(sketchData.accelerometer.x) / 100,
+        // y: canvasSize.height / 2 + Math.abs(sketchData.accelerometer.y) / 100
+        // x: sketchData.gyroscope.x,
+        // y: sketchData.gyroscope.y
+      }
 
       p.background(100)
       p.noStroke()
 
       p.colorMode(p.RGB)
       p.fill(255, 100, 150)
-      p.ellipse(offset, offset, radius, radius)
+      p.ellipse(offset.x, offset.y, radius, radius)
+      // console.log(offset.x, offset.y)
     }
   }
 
