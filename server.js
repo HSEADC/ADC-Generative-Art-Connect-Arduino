@@ -45,6 +45,9 @@ app.listen(3000, () => {
 const { SerialPort } = require('serialport')
 const { ReadlineParser } = require('@serialport/parser-readline')
 
+// To find a proper path type in terminal
+// ls /dev/tty.*
+
 const serialPort = new SerialPort({
   path: '/dev/tty.usbmodem101',
   baudRate: 9600
