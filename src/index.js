@@ -1,3 +1,4 @@
+import './index.scss'
 let radius = 100
 
 // From https://habr.com/ru/post/516334/

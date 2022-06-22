@@ -3,3 +3,5 @@ node_modules
 /dev_build/*.css
 /dev_build/*.js
 /dev_build/*.html
+/dev_build/images
+/dev_build/fonts
