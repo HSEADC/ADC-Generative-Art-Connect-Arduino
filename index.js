@@ -55,7 +55,7 @@ wsConnection.onmessage = function message(event) {
   // console.log(event.data)
   updateData(event.data)
 
-  console.log('message')
+  // console.log('message')
 }
 
 // export const wsSend = function (data) {
@@ -131,13 +131,15 @@ function addDebugPanel() {
   ]
 
   debugLasers.forEach((element, i) => {
-    element.style.color = 'white'
+    element.style.color = '#6BF15C'
     element.id = `laser${i}`
     debugPanel.appendChild(element)
   })
 
   document.body.appendChild(debugPanel)
 }
+
+const divider = 1.3
 
 async function init() {
   console.log('init')
@@ -157,8 +159,23 @@ async function init() {
       console.log('setup ended')
     }
 
+    p.star = (x, y, radius1, radius2, npoints) => {
+      let angle = p.TWO_PI / npoints
+      let halfAngle = angle / 2.0
+      p.beginShape()
+      for (let a = 0; a < p.TWO_PI; a += angle) {
+        let sx = x + p.cos(a) * radius2
+        let sy = y + p.sin(a) * radius2
+        p.vertex(sx, sy)
+        sx = x + p.cos(a + halfAngle) * radius1
+        sy = y + p.sin(a + halfAngle) * radius1
+        p.vertex(sx, sy)
+      }
+      p.endShape(p.CLOSE)
+    }
+
     p.draw = () => {
-      console.log('draw')
+      // console.log('draw')
       w = getRandomArbitrary(20, 80)
       h = getRandomArbitrary(20, 80)
 
@@ -171,19 +188,54 @@ async function init() {
         clearCanvas = false
       }
 
-      // if (colorSwitch) {
-      if (laserSensorsData[3] > 50) {
-        r = getRandomArbitrary(0, 255)
-        g = getRandomArbitrary(0, 255)
-        b = getRandomArbitrary(0, 255)
+      p.frameRate(
+        laserSensorsData[5] < 2500
+          ? parseInt(laserSensorsData[1] / divider)
+          : 255
+      )
 
-        p.fill(r, g, b)
+      // if (colorSwitch) {
+      if (laserSensorsData[1] > 0) {
+        r = getRandomArbitrary(
+          0,
+          laserSensorsData[1] < 2500
+            ? parseInt(laserSensorsData[1] / divider)
+            : 255
+        )
+
+        g = getRandomArbitrary(
+          0,
+          laserSensorsData[1] < 2500
+            ? parseInt(laserSensorsData[4] / divider)
+            : 255
+        )
+
+        b = getRandomArbitrary(
+          0,
+          laserSensorsData[1] < 2500
+            ? parseInt(laserSensorsData[5] / divider)
+            : 255
+        )
+
+        console.log(parseInt(r), parseInt(g), parseInt(b))
+
+        p.fill(parseInt(r), parseInt(g), parseInt(b))
       } else {
         c = getRandomArbitrary(0, 255)
         p.fill(c)
       }
 
-      p.rect(x, y, w, h)
+      if (laserSensorsData[1] > 50) {
+        // p.push()
+        // translate(width * 0.2, height * 0.5)
+        // rotate(frameCount / 200.0)
+        // p.star(0, 0, 5, 70, 3)
+        // p.pop()
+        p.star(x, y, w, h, 5)
+        // } else if (laserSensorsData[1] > 50) {
+      } else {
+        p.rect(x, y, w, h)
+      }
     }
   }
 
@@ -298,7 +350,7 @@ async function init() {
 
 function updateData(data) {
   // if (webAudioStarted) {
-  console.log('received: %s', event.data)
+  // console.log('received: %s', event.data)
   const json = JSON.parse(data)
   const index = json.i - 1
   const value = json.v
@@ -332,37 +384,12 @@ function updateData(data) {
 
       if (index === 3) {
         laserSensorsData[index] = value > 180 ? 180 : parseInt(value / 4)
-
-        const element = document.getElementById(`laser3`)
-        console.log(element)
-
-        if (element) {
-          element.innerText = volt
-        }
       } else if (index === 4) {
         // laserSensorsData[index] = value > 300 ? 300 : value
         laserSensorsData[index] = parseInt(value / 3)
-
-        const element = document.getElementById(`laser4`)
-
-        if (element) {
-          element.innerText = volt
-        }
       } else if (index === 5) {
         laserSensorsData[index] = parseInt(value / 3)
-
-        const element = document.getElementById(`laser5`)
-
-        if (element) {
-          element.innerText = volt
-        }
       } else {
-        const element = document.getElementById(`laser${index}`)
-
-        if (element) {
-          element.innerText = volt
-        }
-
         laserSensorsData[index] = value
       }
     } else {
