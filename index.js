@@ -1,22 +1,30 @@
 import p5 from 'p5'
 import { getRandomArbitrary } from './src/utilities.js'
 
-import * as Tone from 'tone'
-import * as lead from './src/lead.js'
-import * as bass from './src/bass.js'
-import * as solo from './src/solo.js'
-// import * as sampler from './src/sampler.js'
-
 export const wsConnection = new WebSocket('ws://localhost:3000/websocket')
 
 const laserSensorsData = [0, 10, 50, 50, 50, 10, 10]
+const colorMin = 30
+const colorDefault = 200
+const colorLimit = 255 * 4
+const weightLimit = 60
+const amplitudeLimit = 200
+const gridSizeLimit = 60
+const background = 0
+
+function amplitudeCalc() {
+  return parseInt(laserSensorsData[4] / 8)
+}
 
 let buttonEventListener
 
 let canvasSize = {}
 let cellSize
 
-let webAudioStarted = false
+// let webAudioStarted = false
+let started = false
+
+let red, green, blue, weight, amplitude, gridSize
 
 wsConnection.onopen = function () {
   console.log('Соединение установлено.')
@@ -26,7 +34,7 @@ wsConnection.onclose = function (event) {
   if (event.wasClean) {
     console.log('Соединение закрыто чисто')
   } else {
-    console.log('Обрыв соединения') // например, "убит" процесс сервера
+    console.log('Обрыв соединения')
   }
   console.log('Код: ' + event.code + ' причина: ' + event.reason)
 }
@@ -51,30 +59,50 @@ wsConnection.onmessage = function message(event) {
 //   }
 // };
 
-function addStartButton() {
-  const startButton = document.createElement('div')
-  startButton.id = 'startButton'
-  startButton.style.position = 'fixed'
-  startButton.style.top = '10px'
-  startButton.style.right = '10px'
-  startButton.innerText = 'Start'
+function handleKeyPress(e) {
+  // console.log(e.keyCode)
 
-  buttonEventListener = startButton.addEventListener('click', () => {
-    init()
-  })
+  //  1  2  3  4  5  6  7  8  9  0
+  // 49 50 51 52 53 54 55 56 57 48
 
-  document.body.appendChild(startButton)
+  //   q   w   e   r   t   y   u   i   o   p  [  ]  \
+  // 113 119 101 114 116 121 117 105 111 112 91 93 92
+
+  switch (e.keyCode) {
+    case 49:
+      if (!started) {
+        started = true
+        init()
+      }
+
+      break
+  }
 }
 
-function removeStartButton() {
-  const button = document.getElementById('startButton')
+// function addStartButton() {
+//   const startButton = document.createElement('div')
+//   startButton.id = 'startButton'
+//   startButton.style.position = 'fixed'
+//   startButton.style.top = '10px'
+//   startButton.style.right = '10px'
+//   startButton.innerText = 'Start'
 
-  button.removeEventListener('click', () => {
-    init()
-  })
+//   buttonEventListener = startButton.addEventListener('click', () => {
+//     init()
+//   })
 
-  button.remove()
-}
+//   document.body.appendChild(startButton)
+// }
+
+// function removeStartButton() {
+//   const button = document.getElementById('startButton')
+
+//   button.removeEventListener('click', () => {
+//     init()
+//   })
+
+//   button.remove()
+// }
 
 function addCanvasContainer() {
   const container = document.body
@@ -113,7 +141,7 @@ function addDebugPanel() {
   ]
 
   debugLasers.forEach((element, i) => {
-    element.style.color = 'white'
+    element.style.color = '#6BF15C'
     element.id = `laser${i}`
     debugPanel.appendChild(element)
   })
@@ -122,24 +150,9 @@ function addDebugPanel() {
 }
 
 async function init() {
-  removeStartButton()
-  // const context = new Tone.Context()
-  // context.resume()
-  // await Tone.start()
-  Tone.Transport.bpm.value = 140
-  Tone.Transport.start()
+  // removeStartButton()
 
-  webAudioStarted = true
-  //
-  // const instruments = [
-  //   bass.instrument,
-  //   lead.instrument,
-  //   solo.instrument
-  //   // sampler.instrument
-  // ]
-
-  // sampler.instrument[0].part.start(0)
-
+  started = true
   canvasSize = { width: window.innerWidth, height: window.innerHeight }
 
   let sketch = (p) => {
@@ -150,38 +163,52 @@ async function init() {
     }
 
     p.draw = () => {
-      // const background = laserSensorsData[0]
-      const background = 0
+      red =
+        laserSensorsData[4] < colorLimit
+          ? parseInt(laserSensorsData[4] / 4)
+          : red
 
-      const red = laserSensorsData[0]
-      const green = laserSensorsData[1]
-      const blue = laserSensorsData[2]
+      green =
+        laserSensorsData[5] < colorLimit
+          ? parseInt(laserSensorsData[5] / 4)
+          : green
 
-      const weight = laserSensorsData[3] / 3
+      blue =
+        laserSensorsData[1] < colorLimit
+          ? parseInt(laserSensorsData[1] / 4)
+          : blue
 
-      // console.log(laserSensorsData[4] / 3, parseInt(laserSensorsData[4] / 3))
+      weight =
+        laserSensorsData[5] / 10 < weightLimit
+          ? parseInt(laserSensorsData[5] / 10)
+          : weight
 
-      const gridSize = parseInt(laserSensorsData[4] / 3)
-      // const gridSize = 10
+      amplitude = amplitudeCalc() < amplitudeLimit ? amplitudeCalc() : amplitude
+
+      gridSize =
+        laserSensorsData[1] / 3 < gridSizeLimit
+          ? parseInt(laserSensorsData[1] / 3)
+          : gridSize
+
+      // console.log(red, green, blue, weight, amplitude, gridSize)
 
       const cellSize = {
         width: canvasSize.width / gridSize,
         height: canvasSize.height / gridSize
       }
 
-      // const amplitude = laserSensorsData[5] / 10
-      const amplitude = laserSensorsData[5]
-      // const curvature = laserSensorsData[6] / 10
-
       p.background(background)
       p.noFill()
       p.strokeWeight(weight)
 
-      p.stroke(red, green, blue)
+      p.stroke(
+        red < colorMin ? colorDefault : red,
+        green < colorMin ? colorDefault : green,
+        blue < colorMin ? colorDefault : blue
+      )
 
       for (var row = 0; row < gridSize; row++) {
         const top = row * cellSize.height
-
         for (var column = 0; column < gridSize + 1; column++) {
           // const left = (column + 1) * cellSize.width
           const left = column * cellSize.width
@@ -202,7 +229,6 @@ async function init() {
               left,
               top + shift
             )
-
             // console.log(
             //   left,
             //   top + shift,
@@ -218,7 +244,6 @@ async function init() {
           }
         }
       }
-
       const offset = {
         x: canvasSize.width / 2,
         y: canvasSize.height / 2
@@ -230,8 +255,8 @@ async function init() {
 }
 
 function updateData(data) {
-  if (webAudioStarted) {
-    // console.log("received: %s", event.data);
+  if (started) {
+    // console.log('received: %s', event.data)
     const json = JSON.parse(data)
     const index = json.i - 1
     const value = json.v
@@ -244,77 +269,36 @@ function updateData(data) {
         element.innerText = value
       }
 
-      if (value < 8190 && value >= 0) {
-        // console.log('changed', value)
-        // if (index === 0) {
-        //   console.log(value, laserSensorsData[0], value != laserSensorsData[0])
-        // }
+      laserSensorsData[index] = value
 
-        if (index === 5 && value != laserSensorsData[0]) {
-          const now = Tone.now()
-
-          lead.instrument[0].node.triggerAttack(
-            value >= 1300 ? 1300 : value,
-            now
-          )
-        } else if (index === 1 && value != laserSensorsData[1]) {
-          const now = Tone.now()
-          bass.instrument[0].node.triggerAttack(value, now)
-        } else if (index === 4 && value != laserSensorsData[2]) {
-          const now = Tone.now()
-          solo.instrument[0].node.triggerAttack(value, now)
-        }
-
-        if (index === 3) {
-          laserSensorsData[index] = value > 180 ? 180 : parseInt(value / 4)
-        } else if (index === 4) {
-          // laserSensorsData[index] = value > 300 ? 300 : value
-          laserSensorsData[index] = parseInt(value / 3)
-        } else if (index === 5) {
-          laserSensorsData[index] = parseInt(value / 3)
-        } else {
-          laserSensorsData[index] = value
-        }
-      } else {
-        // if (laserSensorsData[index] != 8190) {
-        // laserSensorsData[index] = value
-
-        if (index === 0) {
-          const now = Tone.now()
-          lead.instrument[0].node.triggerRelease(now + 1)
-        } else if (index === 1) {
-          const now = Tone.now()
-          bass.instrument[0].node.triggerRelease(now + 1)
-        } else if (index === 2) {
-          const now = Tone.now()
-          solo.instrument[0].node.triggerRelease(now + 1)
-        }
-        // }
-      }
-      // } else if (json.e === 't') {
-      //   const element = document.getElementById(`laser7`)
-      //
-      //   const volt = (5 / 1023) * value
-      //
-      //   if (element) {
-      //     element.innerText = volt
+      // if (value < 8190 && value >= 0) {
+      //   if (index === 3) {
+      //     laserSensorsData[index] = value > 180 ? 180 : parseInt(value / 4)
+      //   } else if (index === 4) {
+      //     // laserSensorsData[index] = value > 300 ? 300 : value
+      //     laserSensorsData[index] = parseInt(value / 3)
+      //   } else if (index === 5) {
+      //     laserSensorsData[index] = parseInt(value / 3)
+      //   } else {
+      //     laserSensorsData[index] = value
       //   }
-      //
-      //   laserSensorsData[0] = volt
-      //   console.log(volt)
-
-      // console.log('trigger', value, (5 / 1023) * value)
-      // if (volt >= 4.0) {
-      // laserSensorsData[0] = 255
       // } else {
-      // laserSensorsData[0] = 0
+      //   if (laserSensorsData[index] != 8190) {
+      //     laserSensorsData[index] = value
+      //   }
       // }
     }
   }
 }
 
+document.addEventListener('keypress', (e) => {
+  handleKeyPress(e)
+})
+
 document.addEventListener('DOMContentLoaded', () => {
+  document.body.style.backgroundColor = 'black'
+
   addCanvasContainer()
-  addStartButton()
+  // addStartButton()
   // addDebugPanel()
 })
