@@ -1,4 +1,6 @@
-let radius = 100
+let pot = 0
+let dist = 0
+let mic = 0
 
 // From https://habr.com/ru/post/516334/
 export const wsConnection = new WebSocket('ws://localhost:3000/websocket')
@@ -22,8 +24,13 @@ wsConnection.onerror = function (error) {
 
 wsConnection.onmessage = function message(event) {
   // console.log("received: %s", event.data);
-  // console.log(event.data);
-  radius = parseInt(event.data)
+
+  console.log(event.data)
+
+  let jsonData = JSON.parse(event.data)
+  pot = parseInt(jsonData['p'])
+  dist = parseInt(jsonData['d'])
+  mic = parseInt(jsonData['m'])
 }
 
 // export const wsSend = function (data) {
@@ -60,11 +67,35 @@ document.addEventListener('DOMContentLoaded', () => {
       const offset = canvasSize / 2
 
       p.background(100)
-      p.noStroke()
+      // p.noStroke()
 
       p.colorMode(p.RGB)
-      p.fill(255, 100, 150)
-      p.ellipse(offset, offset, radius, radius)
+
+      let r = 0
+
+      if (mic > 520) {
+        let range = mic - 520
+        let coef = 10
+
+        if (range > 25) {
+          coef = 5
+        }
+
+        r = range * coef
+      }
+
+      if (pot == 0) {
+        pot = 5
+      }
+
+      pot = pot + r
+
+      console.log(dist)
+
+      p.fill(r, 100, 150)
+      p.strokeWeight(dist / 10)
+      p.stroke(150, r, 100)
+      p.ellipse(offset, offset, pot, pot)
     }
   }
 

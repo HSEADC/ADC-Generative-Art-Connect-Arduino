@@ -53,11 +53,11 @@ const serialPort = new SerialPort({
 const lineStream = serialPort.pipe(new ReadlineParser({ delimiter: '\n' }))
 
 lineStream.on('data', (data) => {
-  if (ws) {
-    const dataString = data.toString()
+  const dataString = data.toString()
+  // console.log(dataString)
 
+  if (ws) {
     ws.send(dataString)
-    // console.log(dataString);
   }
 })
 
