@@ -25,7 +25,9 @@ wsConnection.onerror = function (error) {
 wsConnection.onmessage = function message(event) {
   // console.log("received: %s", event.data);
 
+  // console.log(event)
   console.log(event.data)
+  // console.log(JSON.parse(event.data))
 
   let jsonData = JSON.parse(event.data)
   pot = parseInt(jsonData['p'])
@@ -90,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       pot = pot + r
 
-      console.log(dist)
+      // console.log(dist)
 
       p.fill(r, 100, 150)
       p.strokeWeight(dist / 10)
